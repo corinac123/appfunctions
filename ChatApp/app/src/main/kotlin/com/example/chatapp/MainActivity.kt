@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ChatAppTheme {
                 val navController = rememberNavController()
-                
+
                 LaunchedEffect(intent) {
                     val navRoute = intent?.getStringExtra("nav_route")
                     if (navRoute != null) {
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "recipients") {
                     composable(
                         route = "recipients",
-                        deepLinks = listOf(navDeepLink { uriPattern = "app://com.example.chatapp/recipients" })
+                        deepLinks = listOf(navDeepLink { uriPattern = "app://com.example.chatapp/recipients" }),
                     ) {
                         RecipientsScreen(
                             onRecipientClick = { recipientId ->
@@ -64,35 +64,38 @@ class MainActivity : ComponentActivity() {
                             },
                             onSettingsClick = {
                                 navController.navigate("functions")
-                            }
+                            },
                         )
                     }
                     composable(
                         route = "functions",
-                        deepLinks = listOf(navDeepLink { uriPattern = "app://com.example.chatapp/functions" })
+                        deepLinks = listOf(navDeepLink { uriPattern = "app://com.example.chatapp/functions" }),
                     ) {
                         AppFunctionsScreen(
-                            onBackClick = { navController.popBackStack() }
+                            onBackClick = { navController.popBackStack() },
                         )
                     }
                     composable(
                         route = "chat/{recipientId}",
                         arguments = listOf(navArgument("recipientId") { type = NavType.StringType }),
-                        deepLinks = listOf(navDeepLink { uriPattern = "app://com.example.chatapp/chat/{recipientId}" })
+                        deepLinks = listOf(navDeepLink { uriPattern = "app://com.example.chatapp/chat/{recipientId}" }),
                     ) { backStackEntry ->
                         val recipientId = backStackEntry.arguments?.getString("recipientId") ?: "bot"
                         ChatScreen(
+                            recipientId = recipientId,
                             onCallClick = { navController.navigate("call/$recipientId") },
-                            onBackClick = { navController.popBackStack() }
+                            onBackClick = { navController.popBackStack() },
                         )
                     }
                     composable(
                         route = "call/{recipientId}",
                         arguments = listOf(navArgument("recipientId") { type = NavType.StringType }),
-                        deepLinks = listOf(navDeepLink { uriPattern = "app://com.example.chatapp/call/{recipientId}" })
-                    ) {
+                        deepLinks = listOf(navDeepLink { uriPattern = "app://com.example.chatapp/call/{recipientId}" }),
+                    ) { backStackEntry ->
+                        val recipientId = backStackEntry.arguments?.getString("recipientId") ?: "bot"
                         CallScreen(
-                            onEndCall = { navController.popBackStack() }
+                            recipientId = recipientId,
+                            onEndCall = { navController.popBackStack() },
                         )
                     }
                 }

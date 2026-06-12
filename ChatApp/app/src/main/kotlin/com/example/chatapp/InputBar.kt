@@ -69,10 +69,11 @@ internal fun InputBar(
     modifier: Modifier = Modifier,
 ) {
     var selectedImages by remember { mutableStateOf<List<Uri>>(emptyList()) }
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(),
-        onResult = { uris -> selectedImages = uris }
-    )
+    val photoPickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickMultipleVisualMedia(),
+            onResult = { uris -> selectedImages = uris },
+        )
 
     Surface(
         modifier = modifier,
@@ -81,68 +82,71 @@ internal fun InputBar(
         Column {
             if (selectedImages.isNotEmpty()) {
                 LazyRow(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(selectedImages) { uri ->
                         AsyncImage(
                             model = uri,
                             contentDescription = null,
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(MaterialTheme.shapes.medium),
-                            contentScale = ContentScale.Crop
+                            modifier =
+                                Modifier
+                                    .size(72.dp)
+                                    .clip(MaterialTheme.shapes.medium),
+                            contentScale = ContentScale.Crop,
                         )
                     }
                 }
             }
             Row(
                 modifier =
-                Modifier
-                    .padding(16.dp),
+                    Modifier
+                        .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 IconButton(
                     onClick = {
                         photoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                         )
-                    }
+                    },
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Add Image"
+                        contentDescription = "Add Image",
                     )
                 }
                 TextField(
                     value = value,
                     onValueChange = onInputChanged,
                     modifier =
-                    Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = 56.dp)
-                        .wrapContentHeight(),
+                        Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 56.dp)
+                            .wrapContentHeight(),
                     keyboardOptions =
-                    KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Send,
-                    ),
-                    keyboardActions = KeyboardActions(onSend = {
-                        onSendClick(selectedImages)
-                        selectedImages = emptyList()
-                    }),
+                        KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            imeAction = ImeAction.Send,
+                        ),
+                    keyboardActions =
+                        KeyboardActions(onSend = {
+                            onSendClick(selectedImages)
+                            selectedImages = emptyList()
+                        }),
                     placeholder = { Text(placeholder) },
                     shape = MaterialTheme.shapes.extraLarge,
                     colors =
-                    TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.background,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                    ),
+                        TextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                        ),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 FilledIconButton(

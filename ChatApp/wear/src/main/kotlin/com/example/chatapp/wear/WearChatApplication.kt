@@ -13,28 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-pluginManagement {
-    repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+package com.example.chatapp.wear
 
-rootProject.name = "ChatApp"
-include(":app")
-include(":shared")
-include(":wear")
+import com.example.chatapp.BaseChatApplication
+import dagger.hilt.android.HiltAndroidApp
+
+@HiltAndroidApp
+class WearChatApplication : BaseChatApplication()

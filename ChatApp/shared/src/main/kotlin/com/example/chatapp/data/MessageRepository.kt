@@ -16,7 +16,6 @@
 package com.example.chatapp.data
 
 import android.net.Uri
-import com.example.chatapp.uicomponents.DisplayMessage
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

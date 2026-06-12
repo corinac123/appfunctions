@@ -16,21 +16,22 @@
 package com.example.chatapp
 
 import android.net.Uri
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatapp.appfunctions.AppFunctions.Recipient
 import com.example.chatapp.data.CallManager
+import com.example.chatapp.data.DisplayMessage
 import com.example.chatapp.data.MessageRepository
 import com.example.chatapp.data.RecipientsRepository
-import com.example.chatapp.uicomponents.DisplayMessage
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Represents the current state of the bot's response generation process.
@@ -65,16 +66,19 @@ data class ChatbotUiState(
     val botMessageState: BotMessageState = BotMessageState.WaitingForMessage,
 )
 
-@HiltViewModel
+@HiltViewModel(assistedFactory = ChatViewModel.Factory::class)
 class ChatViewModel
-    @Inject
+    @AssistedInject
     constructor(
-        savedStateHandle: SavedStateHandle,
+        @Assisted private val recipientId: String,
         private val messageRepository: MessageRepository,
         private val callManager: CallManager,
         private val recipientsRepository: RecipientsRepository,
     ) : ViewModel() {
-        private val recipientId: String = savedStateHandle.get<String>("recipientId") ?: "bot"
+        @AssistedFactory
+        interface Factory {
+            fun create(recipientId: String): ChatViewModel
+        }
 
         val recipient: Recipient =
             recipientsRepository.getRecipientById(recipientId)

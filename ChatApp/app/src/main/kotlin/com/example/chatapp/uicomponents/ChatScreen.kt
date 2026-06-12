@@ -18,17 +18,14 @@ package com.example.chatapp.uicomponents
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -66,17 +63,25 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import com.example.chatapp.ChatViewModel
 import com.example.chatapp.BotMessageState
+import com.example.chatapp.ChatViewModel
 import com.example.chatapp.InputBar
 import com.example.chatapp.R
+import com.example.chatapp.data.DisplayMessage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    viewModel: ChatViewModel = hiltViewModel(),
+    recipientId: String,
+    viewModel: ChatViewModel =
+        hiltViewModel(
+            key = recipientId,
+            creationCallback = { factory: ChatViewModel.Factory ->
+                factory.create(recipientId)
+            },
+        ),
     onCallClick: () -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
 ) {
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
@@ -84,15 +89,17 @@ fun ChatScreen(
     var message by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                colors = topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
+                colors =
+                    topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
                 title = {
                     Text(text = viewModel.recipient.name)
                 },
@@ -100,7 +107,7 @@ fun ChatScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
                         )
                     }
                 },
@@ -108,10 +115,10 @@ fun ChatScreen(
                     IconButton(onClick = onCallClick) {
                         Icon(
                             imageVector = Icons.Default.Call,
-                            contentDescription = "Call"
+                            contentDescription = "Call",
                         )
                     }
-                }
+                },
             )
         },
         bottomBar = {
@@ -126,23 +133,26 @@ fun ChatScreen(
                     message = ""
                 },
                 sendEnabled = uiState.botMessageState !is BotMessageState.Generating,
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .imePadding()
+                modifier =
+                    Modifier
+                        .navigationBarsPadding()
+                        .imePadding(),
             )
-        }
+        },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .consumeWindowInsets(innerPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding),
         ) {
             MessageList(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .weight(1f),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .weight(1f),
                 messages = uiState.messages,
                 contentPadding = PaddingValues(bottom = 8.dp),
             )
@@ -150,9 +160,10 @@ fun ChatScreen(
             when (val state = uiState.botMessageState) {
                 is BotMessageState.Generating -> {
                     CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .align(Alignment.CenterHorizontally),
+                        modifier =
+                            Modifier
+                                .padding(vertical = 8.dp)
+                                .align(Alignment.CenterHorizontally),
                     )
                 }
 
@@ -169,7 +180,7 @@ fun ChatScreen(
                     )
                 }
 
-                else -> { /* No additional UI for waiting state */
+                else -> { // No additional UI for waiting state
                 }
             }
         }
@@ -197,26 +208,30 @@ fun MessageList(
 }
 
 @Composable
-fun MessageBubble(message: DisplayMessage, modifier: Modifier = Modifier) {
+fun MessageBubble(
+    message: DisplayMessage,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = if (message.isInbound) Alignment.Start else Alignment.End,
     ) {
         if (message.isInbound && message.senderName != null) {
             Text(
-                text = message.senderName,
+                text = message.senderName ?: "???",
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
-                color = MaterialTheme.colorScheme.secondary
+                color = MaterialTheme.colorScheme.secondary,
             )
         }
         Surface(
             modifier = Modifier.widthIn(max = 300.dp),
-            color = if (message.isInbound) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.primary
-            },
+            color =
+                if (message.isInbound) {
+                    MaterialTheme.colorScheme.secondaryContainer
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
             shape = MaterialTheme.shapes.large,
         ) {
             Column {
@@ -225,25 +240,27 @@ fun MessageBubble(message: DisplayMessage, modifier: Modifier = Modifier) {
                         AsyncImage(
                             model = message.images[0],
                             contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .clip(MaterialTheme.shapes.large),
-                            contentScale = ContentScale.Crop
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(MaterialTheme.shapes.large),
+                            contentScale = ContentScale.Crop,
                         )
                     } else {
                         LazyRow(
                             contentPadding = PaddingValues(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             items(message.images) { imageUri ->
                                 AsyncImage(
                                     model = imageUri,
                                     contentDescription = null,
-                                    modifier = Modifier
-                                        .size(150.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                    contentScale = ContentScale.Crop
+                                    modifier =
+                                        Modifier
+                                            .size(150.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Crop,
                                 )
                             }
                         }

@@ -41,7 +41,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,7 +64,7 @@ import com.example.chatapp.appfunctions.AppFunctions.Recipient
 fun RecipientsScreen(
     viewModel: RecipientsViewModel = hiltViewModel(),
     onRecipientClick: (String) -> Unit,
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
 ) {
     val recipients = viewModel.recipients
     val groups = viewModel.groups
@@ -78,20 +77,21 @@ fun RecipientsScreen(
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
+                            contentDescription = "Settings",
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
             )
-        }
+        },
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = innerPadding
+            contentPadding = innerPadding,
         ) {
             items(groups) { group ->
                 val lastMessage by viewModel.getLastMessage(group.id).collectAsStateWithLifecycle(initialValue = null)
@@ -99,16 +99,16 @@ fun RecipientsScreen(
                 GroupListItem(
                     group = group,
                     lastMessage = lastMessage?.content,
-                    onClick = { onRecipientClick(group.id) }
+                    onClick = { onRecipientClick(group.id) },
                 )
             }
             items(recipients) { recipient ->
                 val lastMessage by viewModel.getLastMessage(recipient.id).collectAsStateWithLifecycle(initialValue = null)
-                
+
                 RecipientListItem(
                     recipient = recipient,
                     lastMessage = lastMessage?.content,
-                    onClick = { onRecipientClick(recipient.id) }
+                    onClick = { onRecipientClick(recipient.id) },
                 )
             }
         }
@@ -119,26 +119,28 @@ fun RecipientsScreen(
 fun GroupListItem(
     group: ChatGroup,
     lastMessage: String?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape),
-            color = MaterialTheme.colorScheme.tertiaryContainer
+            modifier =
+                Modifier
+                    .size(48.dp)
+                    .clip(CircleShape),
+            color = MaterialTheme.colorScheme.tertiaryContainer,
         ) {
             Icon(
                 imageVector = Icons.Default.Person, // Could use Groups icon if available
                 contentDescription = null,
                 modifier = Modifier.padding(12.dp),
-                tint = MaterialTheme.colorScheme.onTertiaryContainer
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
             )
         }
 
@@ -148,7 +150,7 @@ fun GroupListItem(
             Text(
                 text = group.name,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             val members = group.recipients.joinToString(", ") { it.name }
             Text(
@@ -156,7 +158,7 @@ fun GroupListItem(
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (lastMessage != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -166,43 +168,45 @@ fun GroupListItem(
 fun RecipientListItem(
     recipient: Recipient,
     lastMessage: String?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape),
-            color = MaterialTheme.colorScheme.secondaryContainer
+            modifier =
+                Modifier
+                    .size(48.dp)
+                    .clip(CircleShape),
+            color = MaterialTheme.colorScheme.secondaryContainer,
         ) {
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
                 modifier = Modifier.padding(12.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
             )
         }
-        
+
         Spacer(modifier = Modifier.width(16.dp))
-        
+
         Column {
             Text(
                 text = recipient.name,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = lastMessage ?: recipient.email,
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (lastMessage != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

@@ -18,9 +18,9 @@ package com.example.chatapp
 import androidx.lifecycle.ViewModel
 import com.example.chatapp.appfunctions.AppFunctions.ChatGroup
 import com.example.chatapp.appfunctions.AppFunctions.Recipient
+import com.example.chatapp.data.DisplayMessage
 import com.example.chatapp.data.MessageRepository
 import com.example.chatapp.data.RecipientsRepository
-import com.example.chatapp.uicomponents.DisplayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

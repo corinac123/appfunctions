@@ -52,8 +52,15 @@ import com.example.chatapp.ui.theme.ChatAppTheme
 
 @Composable
 fun CallScreen(
-    viewModel: ChatViewModel = hiltViewModel(),
-    onEndCall: () -> Unit
+    recipientId: String,
+    viewModel: ChatViewModel =
+        hiltViewModel(
+            key = recipientId,
+            creationCallback = { factory: ChatViewModel.Factory ->
+                factory.create(recipientId)
+            },
+        ),
+    onEndCall: () -> Unit,
 ) {
     val activeCall by viewModel.activeCall.collectAsStateWithLifecycle()
 
@@ -63,67 +70,70 @@ fun CallScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surface,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .safeDrawingPadding(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Spacer(modifier = Modifier.height(64.dp))
-            
+
             // Profile Info
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = "Profile Picture",
                         modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 Text(
                     text = activeCall?.name ?: "Unknown",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
-            
+
             // Call Controls
             Box(
-                modifier = Modifier
-                    .padding(bottom = 64.dp)
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(Color.Red),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .padding(bottom = 64.dp)
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(Color.Red),
+                contentAlignment = Alignment.Center,
             ) {
                 IconButton(
                     onClick = {
                         viewModel.endCall()
                         onEndCall()
                     },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Clear,
                         contentDescription = "End Call",
                         tint = Color.White,
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp),
                     )
                 }
             }
@@ -135,6 +145,6 @@ fun CallScreen(
 @Composable
 fun CallScreenPreview() {
     ChatAppTheme {
-        CallScreen(onEndCall = {})
+        CallScreen(recipientId = "bot", onEndCall = {})
     }
 }
