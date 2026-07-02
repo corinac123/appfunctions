@@ -70,12 +70,12 @@ class AppFunctionInstrumentationTest {
                     )
                     .first()
                     .flatMap { it.appFunctions }
-                    .single { it.id == ChatAppFunctionService.FUNCTION_ID_SEND }
+                    .single { it.id == ChatAppFunctionService.FUNCTION_ID_SEND_MESSAGE }
             val testRecipient = recipientsRepository.getAllRecipients().first()
             val request =
                 ExecuteAppFunctionRequest(
                     targetPackageName = context.packageName,
-                    ChatAppFunctionService.FUNCTION_ID_SEND,
+                    ChatAppFunctionService.FUNCTION_ID_SEND_MESSAGE,
                     AppFunctionData.Builder(
                         sendMessageFunctionMetadata.parameters,
                         sendMessageFunctionMetadata.components,
@@ -109,12 +109,12 @@ class AppFunctionInstrumentationTest {
                     )
                     .first()
                     .flatMap { it.appFunctions }
-                    .single { it.id == ChatAppFunctionService.FUNCTION_ID_SEND }
+                    .single { it.id == ChatAppFunctionService.FUNCTION_ID_SEND_MESSAGE }
             val testRecipient = recipientsRepository.getAllRecipients().first()
             val request =
                 ExecuteAppFunctionRequest(
                     targetPackageName = context.packageName,
-                    ChatAppFunctionService.FUNCTION_ID_SEND,
+                    ChatAppFunctionService.FUNCTION_ID_SEND_MESSAGE,
                     AppFunctionData.Builder(
                         sendMessageFunctionMetadata.parameters,
                         sendMessageFunctionMetadata.components,
@@ -151,7 +151,7 @@ class AppFunctionInstrumentationTest {
                         getRecipientsFunctionMetadata.components,
                     )
                         .setString("query", "Alice")
-                        .setString("filterType", "INDIVIDUAL")
+                        .setString("contactType", "INDIVIDUAL")
                         .build(),
                 )
 
@@ -165,7 +165,12 @@ class AppFunctionInstrumentationTest {
                     ?.map { it.deserialize(ContactSearchResult::class.java) },
             )
                 .containsExactly(
-                    ContactSearchResult(endpointValue = "1", endpointType = "INDIVIDUAL", displayName = "Alice Smith"),
+                    AppFunctions.ContactSearchResult(
+                        endpointValue = "1",
+                        endpointType = "INDIVIDUAL",
+                        contactDisplayName = "Alice Smith",
+                        endpointDisplayName = "alice@example.com",
+                    ),
                 )
         }
 }
