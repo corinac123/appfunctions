@@ -160,7 +160,7 @@ class RecipientsRepository
 
         fun getRecipientById(id: String): Recipient? = recipients.singleOrNull { it.id == id }
 
-        fun getRecipientByName(name: String): Recipient? = recipients.singleOrNull { it.name == name }
+        fun getRecipientByName(name: String): List<Recipient> = recipients.filter { it.name == name }
 
         fun getGroupById(id: String): ChatGroup? = groups.singleOrNull { it.id == id }
     }
