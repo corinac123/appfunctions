@@ -89,8 +89,7 @@ class AppFunctionInstrumentationTest {
             val successResponse = assertIs<ExecuteAppFunctionResponse.Success>(response)
             assertThat(
                 successResponse.returnValue
-                    .getAppFunctionData(ExecuteAppFunctionResponse.Success.PROPERTY_RETURN_VALUE)
-                    ?.getString("message"),
+                    .getString(ExecuteAppFunctionResponse.Success.PROPERTY_RETURN_VALUE),
             )
                 .isEqualTo("Message sent to: Alice Smith.")
             // Verify that the message was actually saved in the repository

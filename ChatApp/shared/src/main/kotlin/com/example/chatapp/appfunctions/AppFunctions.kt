@@ -103,6 +103,7 @@ class AppFunctions
          * @param endpointValue The unique identifier for the recipient or group.
          * @param messageBody The text content of the message. Cannot be empty.
          * @param imageUris List of URIs for images to attach.
+         * @return A human-readable message indicating the error or confirmation.
          */
         @AppFunction(isDescribedByKDoc = true)
         suspend fun sendMessage(
@@ -110,7 +111,7 @@ class AppFunctions
             endpointValue: String,
             messageBody: String,
             imageUris: List<Uri>? = null,
-        ): SendMessageResult {
+        ): String {
             if (messageBody.isBlank()) {
                 throw AppFunctionInvalidArgumentException("Message body cannot be empty")
             }
@@ -134,7 +135,7 @@ class AppFunctions
 
             // 3. RETURN: Provide a confirmation string
             // The bot may use this string or the fact that it didn't throw to confirm success.
-            return SendMessageResult("Message sent to: $displayName.")
+            return "Message sent to: $displayName."
         }
 
         /**
@@ -229,12 +230,7 @@ class AppFunctions
             val endpointDisplayName: String,
         )
 
-        /** Result of a message sending operation. */
-        @AppFunctionSerializable(isDescribedByKDoc = true)
-        data class SendMessageResult(
-            /** A human-readable status message indicating success. */
-            val message: String,
-        )
+
 
         /** Represents a recipient of a message. */
         @AppFunctionSerializable(isDescribedByKDoc = true)

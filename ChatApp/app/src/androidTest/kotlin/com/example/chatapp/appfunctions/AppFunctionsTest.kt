@@ -137,9 +137,7 @@ class AppFunctionsTest {
         runTest {
             val result = appFunctions.sendMessage(testContext, "1", "Hello")
             Assert.assertEquals(
-                AppFunctions.SendMessageResult(
-                    "Message sent to: Alice Smith.",
-                ),
+                "Message sent to: Alice Smith.",
                 result,
             )
         }
@@ -156,9 +154,7 @@ class AppFunctionsTest {
                     listOf(Uri.parse("content://media/1")),
                 )
             Assert.assertEquals(
-                AppFunctions.SendMessageResult(
-                    "Message sent to: Alice Smith.",
-                ),
+                "Message sent to: Alice Smith.",
                 result,
             )
         }
@@ -169,9 +165,7 @@ class AppFunctionsTest {
         runTest {
             val result = appFunctions.sendMessage(testContext, "g1", "Hello")
             Assert.assertEquals(
-                AppFunctions.SendMessageResult(
-                    "Message sent to: Work Friends.",
-                ),
+                "Message sent to: Work Friends.",
                 result,
             )
         }
