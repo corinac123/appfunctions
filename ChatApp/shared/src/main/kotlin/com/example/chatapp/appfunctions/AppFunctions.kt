@@ -45,9 +45,9 @@ class AppFunctions
          * Search for contacts or groups by name.
          *
          * @param appFunctionContext The context of this app function call.
-         * @param query Search string for the contact or group name. Can be partial or full names.
-         *   If blank, returns the most recently contacted entities.
+         * @param query Search string for the contact or group name. Can be partial or full names. Throws [AppFunctionInvalidArgumentException] if empty.
          * @param contactType Filter results by entity type. Accepts "INDIVIDUAL", "GROUP", or "ANY".
+         * @throws AppFunctionInvalidArgumentException if the query is blank or no matching contacts/groups are found.
          */
         @AppFunction(isDescribedByKDoc = true)
         suspend fun searchContacts(
@@ -68,7 +68,7 @@ class AppFunctions
                         recipientsRepository.searchGroups(query, 3).map {
                             ContactSearchResult(
                                 contactDisplayName = it.name,
-                                endpointType = "GROUP",
+                                contactType = "GROUP",
                                 endpoints = listOf(
                                     Endpoint(
                                         endpointValue = it.id,
@@ -231,7 +231,7 @@ class AppFunctions
             /** The human-readable name of the contact or group. */
             val contactDisplayName: String,
             /** The type of the found entity, either "INDIVIDUAL" or "GROUP". */
-            val endpointType: String,
+            val contactType: String,
             /** The list of endpoints associated with this contact or group. */
             val endpoints: List<Endpoint>,
         )

@@ -104,7 +104,7 @@ class RecipientsRepository
             val grouped = matched.groupBy { it.name }.map { (name, list) ->
                 ContactSearchResult(
                     contactDisplayName = name,
-                    endpointType = "INDIVIDUAL",
+                    contactType = "INDIVIDUAL",
                     endpoints = list.map { Endpoint(it.id, it.email) }
                 )
             }
@@ -157,7 +157,7 @@ class RecipientsRepository
                 searchGroups(query, maxCount).map {
                     ContactSearchResult(
                         contactDisplayName = it.name,
-                        endpointType = "GROUP",
+                        contactType = "GROUP",
                         endpoints = listOf(
                             Endpoint(
                                 endpointValue = it.id,
