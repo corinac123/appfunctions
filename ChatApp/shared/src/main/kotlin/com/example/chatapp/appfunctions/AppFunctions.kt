@@ -278,7 +278,7 @@ class AppFunctions
         data class MessagesSearchResult(
             /** The unique identifier of the contact or group. */
             val endpointValue: String,
-            /** The list of matching messages found in this chat. */
+            /** The list of relevant messages found in this chat. */
             val messages: List<Message>,
         )
     }
