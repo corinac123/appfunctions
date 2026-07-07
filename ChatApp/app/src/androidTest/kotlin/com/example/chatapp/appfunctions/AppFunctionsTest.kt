@@ -101,9 +101,8 @@ class AppFunctionsTest {
             Assert.assertEquals(1, contacts.size)
             Assert.assertEquals("Alice Smith", contacts[0].contactDisplayName)
             Assert.assertEquals("INDIVIDUAL", contacts[0].contactType)
-            Assert.assertEquals(1, contacts[0].endpoints.size)
-            Assert.assertEquals("1", contacts[0].endpoints[0].endpointValue)
-            Assert.assertEquals("alice@example.com", contacts[0].endpoints[0].endpointDisplayName)
+            Assert.assertEquals("1", contacts[0].endpointValue)
+            Assert.assertEquals("alice@example.com", contacts[0].endpointDisplayName)
         }
     }
 
@@ -114,9 +113,8 @@ class AppFunctionsTest {
             Assert.assertEquals(1, contacts.size)
             Assert.assertEquals("Work Friends", contacts[0].contactDisplayName)
             Assert.assertEquals("GROUP", contacts[0].contactType)
-            Assert.assertEquals(1, contacts[0].endpoints.size)
-            Assert.assertEquals("g1", contacts[0].endpoints[0].endpointValue)
-            Assert.assertEquals("Work Friends", contacts[0].endpoints[0].endpointDisplayName)
+            Assert.assertEquals("g1", contacts[0].endpointValue)
+            Assert.assertEquals("Work Friends", contacts[0].endpointDisplayName)
         }
     }
 
@@ -134,24 +132,26 @@ class AppFunctionsTest {
             Assert.assertEquals(1, contacts.size)
             Assert.assertEquals("Alice Smith", contacts[0].contactDisplayName)
             Assert.assertEquals("INDIVIDUAL", contacts[0].contactType)
-            Assert.assertEquals(1, contacts[0].endpoints.size)
-            Assert.assertEquals("1", contacts[0].endpoints[0].endpointValue)
-            Assert.assertEquals("alice@example.com", contacts[0].endpoints[0].endpointDisplayName)
+            Assert.assertEquals("1", contacts[0].endpointValue)
+            Assert.assertEquals("alice@example.com", contacts[0].endpointDisplayName)
         }
     }
 
     @Test
-    fun searchContacts_duplicateNamesMerged() {
+    fun searchContacts_duplicateNamesReturnedAsSeparate() {
         runBlocking {
             val contacts = appFunctions.searchContacts(testContext, "Bob", "INDIVIDUAL")
-            Assert.assertEquals(1, contacts.size)
+            Assert.assertEquals(2, contacts.size)
+            
             Assert.assertEquals("Bob Johnson", contacts[0].contactDisplayName)
             Assert.assertEquals("INDIVIDUAL", contacts[0].contactType)
-            Assert.assertEquals(2, contacts[0].endpoints.size)
-            Assert.assertEquals("2", contacts[0].endpoints[0].endpointValue)
-            Assert.assertEquals("bob@example.com", contacts[0].endpoints[0].endpointDisplayName)
-            Assert.assertEquals("7", contacts[0].endpoints[1].endpointValue)
-            Assert.assertEquals("bob2@example.com", contacts[0].endpoints[1].endpointDisplayName)
+            Assert.assertEquals("2", contacts[0].endpointValue)
+            Assert.assertEquals("bob@example.com", contacts[0].endpointDisplayName)
+
+            Assert.assertEquals("Bob Johnson", contacts[1].contactDisplayName)
+            Assert.assertEquals("INDIVIDUAL", contacts[1].contactType)
+            Assert.assertEquals("7", contacts[1].endpointValue)
+            Assert.assertEquals("bob2@example.com", contacts[1].endpointDisplayName)
         }
     }
 

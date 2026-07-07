@@ -69,12 +69,8 @@ class AppFunctions
                             ContactSearchResult(
                                 contactDisplayName = it.name,
                                 contactType = "GROUP",
-                                endpoints = listOf(
-                                    Endpoint(
-                                        endpointValue = it.id,
-                                        endpointDisplayName = it.name,
-                                    )
-                                )
+                                endpointValue = it.id,
+                                endpointDisplayName = it.name,
                             )
                         }
                     }
@@ -232,13 +228,6 @@ class AppFunctions
             val contactDisplayName: String,
             /** The type of the found entity, either "INDIVIDUAL" or "GROUP". */
             val contactType: String,
-            /** The list of endpoints associated with this contact or group. */
-            val endpoints: List<Endpoint>,
-        )
-
-        /** Represents an endpoint of a contact or group. */
-        @AppFunctionSerializable(isDescribedByKDoc = true)
-        data class Endpoint(
             /** The unique identifier of the endpoint. */
             val endpointValue: String,
             /** The human-readable label/display name of the endpoint. */

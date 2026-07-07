@@ -101,18 +101,19 @@ class RecipientsRepository
                 }
             }
 
-            val grouped = matched.groupBy { it.name }.map { (name, list) ->
+            val mapped = matched.map {
                 ContactSearchResult(
-                    contactDisplayName = name,
+                    contactDisplayName = it.name,
                     contactType = "INDIVIDUAL",
-                    endpoints = list.map { Endpoint(it.id, it.email) }
+                    endpointValue = it.id,
+                    endpointDisplayName = it.email,
                 )
             }
 
             return if (query.isNullOrBlank()) {
-                grouped.take(maxCount)
+                mapped.take(maxCount)
             } else {
-                grouped
+                mapped
             }
         }
 
@@ -158,12 +159,8 @@ class RecipientsRepository
                     ContactSearchResult(
                         contactDisplayName = it.name,
                         contactType = "GROUP",
-                        endpoints = listOf(
-                            Endpoint(
-                                endpointValue = it.id,
-                                endpointDisplayName = it.name,
-                            )
-                        )
+                        endpointValue = it.id,
+                        endpointDisplayName = it.name,
                     )
                 }
             return mutableListOf<ContactSearchResult>().apply {

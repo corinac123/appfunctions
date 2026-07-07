@@ -167,12 +167,8 @@ class AppFunctionInstrumentationTest {
                     AppFunctions.ContactSearchResult(
                         contactDisplayName = "Alice Smith",
                         contactType = "INDIVIDUAL",
-                        endpoints = listOf(
-                            AppFunctions.Endpoint(
-                                endpointValue = "1",
-                                endpointDisplayName = "alice@example.com",
-                            )
-                        )
+                        endpointValue = "1",
+                        endpointDisplayName = "alice@example.com",
                     ),
                 )
         }
