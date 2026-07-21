@@ -20,7 +20,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.appfunctions.metadata.AppFunctionArrayTypeMetadata
+import androidx.appfunctions.metadata.AppFunctionDataTypeMetadata
 import androidx.appfunctions.metadata.AppFunctionMetadata
+import androidx.appfunctions.metadata.AppFunctionObjectTypeMetadata
+import androidx.appfunctions.metadata.AppFunctionParameterMetadata
+import androidx.appfunctions.metadata.AppFunctionReferenceTypeMetadata
+import androidx.core.content.FileProvider
 import com.example.appfunctions.agent.data.LlmProviderName
 import com.example.appfunctions.agent.data.SettingsRepository
 import com.example.appfunctions.agent.data.db.entities.MessageAttachment
@@ -54,6 +60,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -366,7 +375,26 @@ class AgentOrchestrator
                     return ExecuteToolCallsResult.Error
                 }
 
-                val convertedInputs = toolCall.arguments.filterValues { it != null } as Map<String, Any>
+                val rawConvertedInputs = toolCall.arguments.filterValues { it != null } as Map<String, Any>
+                val convertedInputs =
+                    try {
+                        withContext(Dispatchers.IO) {
+                            resolveRemoteFileReferencesRecursively(
+                                context = context,
+                                parametersMetadata = matchingTool.parameters,
+                                inputs = rawConvertedInputs,
+                            )
+                        }
+                    } catch (e: Exception) {
+                        completeMessageWithError(
+                            message.messageId,
+                            message.threadId,
+                            "Failed to download remote file reference: ${e.message}",
+                        )
+                        return ExecuteToolCallsResult.Error
+                    }
+
+                grantContentUriPermissionsRecursively(context, toolCall.packageName, convertedInputs)
 
                 for (value in convertedInputs.values) {
                     if (value is String && value.startsWith("content://")) {
@@ -389,7 +417,6 @@ class AgentOrchestrator
                             inputs = convertedInputs,
                         )
                     }
-
                 if (appFunctionDataResult.isFailure) {
                     completeMessageWithError(
                         message.messageId,
@@ -471,5 +498,164 @@ class AgentOrchestrator
                 textContent = reason,
                 processingStatus = MessageProcessingStatus.FAILED,
             )
+        }
+
+        private fun resolveRemoteFileReferencesRecursively(
+            context: Context,
+            parametersMetadata: List<AppFunctionParameterMetadata>,
+            inputs: Map<String, Any>,
+        ): Map<String, Any> {
+            val paramMap = parametersMetadata.associateBy { it.name }
+            return inputs.mapValues { (key, value) ->
+                val paramMeta = paramMap[key]
+                resolveValueRecursively(context, paramMeta?.dataType, value, key)
+            }
+        }
+
+        private fun resolveValueRecursively(
+            context: Context,
+            dataType: AppFunctionDataTypeMetadata?,
+            value: Any,
+            paramName: String?,
+        ): Any {
+            return when (value) {
+                is String -> {
+                    val shouldResolve =
+                        isFileReferenceParameter(paramName) || isUriMetadata(dataType)
+                    if (shouldResolve && (
+                            value.startsWith(
+                                "http://",
+                            ) || value.startsWith("https://")
+                        )
+                    ) {
+                        downloadRemoteFileToContentUri(context, value)
+                    } else {
+                        value
+                    }
+                }
+                is Map<*, *> -> {
+                    value.entries.associate { entry ->
+                        val k = entry.key as String
+                        val propType =
+                            (dataType as? AppFunctionObjectTypeMetadata)?.properties?.get(k)
+                        k to (
+                            entry.value?.let {
+                                resolveValueRecursively(
+                                    context,
+                                    propType,
+                                    it,
+                                    k,
+                                )
+                            } ?: ""
+                        )
+                    }
+                }
+                is List<*> -> {
+                    val itemType = (dataType as? AppFunctionArrayTypeMetadata)?.itemType
+                    value.mapNotNull { item ->
+                        if (item != null) resolveValueRecursively(context, itemType, item, paramName) else null
+                    }
+                }
+                else -> value
+            }
+        }
+
+        private fun downloadRemoteFileToContentUri(
+            context: Context,
+            urlString: String,
+        ): String {
+            val url = URL(urlString)
+            val connection =
+                (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 10000
+                    readTimeout = 15000
+                }
+            try {
+                connection.connect()
+                val contentType = connection.contentType ?: ""
+                val ext =
+                    when {
+                        contentType.contains("png", ignoreCase = true) -> "png"
+                        contentType.contains("jpeg", ignoreCase = true) ||
+                            contentType.contains("jpg", ignoreCase = true) -> "jpg"
+                        contentType.contains("gif", ignoreCase = true) -> "gif"
+                        contentType.contains("webp", ignoreCase = true) -> "webp"
+                        urlString.substringAfterLast("/", "").contains(".") ->
+                            urlString.substringAfterLast("/").substringAfterLast(".")
+                        else -> "jpg"
+                    }
+                val cacheDir = File(context.cacheDir, "file_references").apply { mkdirs() }
+                val file = File(cacheDir, "generated_${UUID.randomUUID()}.$ext")
+                connection.inputStream.use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                val contentUri =
+                    FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        file,
+                    )
+                return contentUri.toString()
+            } finally {
+                connection.disconnect()
+            }
+        }
+
+        private fun grantContentUriPermissionsRecursively(
+            context: Context,
+            targetPackageName: String,
+            value: Any?,
+        ) {
+            when (value) {
+                is String -> {
+                    if (value.startsWith("content://")) {
+                        runCatching {
+                            val uri = Uri.parse(value)
+                            context.grantUriPermission(
+                                targetPackageName,
+                                uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                            )
+                        }
+                    }
+                }
+                is Map<*, *> ->
+                    value.values.forEach {
+                        grantContentUriPermissionsRecursively(context, targetPackageName, it)
+                    }
+                is List<*> ->
+                    value.forEach {
+                        grantContentUriPermissionsRecursively(context, targetPackageName, it)
+                    }
+            }
+        }
+
+        private fun isFileReferenceParameter(parameterName: String?): Boolean {
+            if (parameterName == null) return false
+            if (parameterName in KNOWN_FILE_REFERENCE_PARAM_NAMES) return true
+            return parameterName.endsWith("Uri", ignoreCase = true) ||
+                parameterName.endsWith("Uris", ignoreCase = true)
+        }
+
+        private fun isUriMetadata(dataType: AppFunctionDataTypeMetadata?): Boolean {
+            if (dataType == null) return false
+            if (dataType is AppFunctionObjectTypeMetadata && dataType.qualifiedName == "android.net.Uri") return true
+            if (dataType is AppFunctionReferenceTypeMetadata && dataType.referenceDataType == "android.net.Uri") return true
+            return false
+        }
+
+        companion object {
+            private val KNOWN_FILE_REFERENCE_PARAM_NAMES =
+                setOf(
+                    "wallpaperUri",
+                    "imageUri",
+                    "attachmentUri",
+                    "ringtoneUri",
+                    "profilePictureUri",
+                    "audioUri",
+                    "voiceNoteUri",
+                )
         }
     }

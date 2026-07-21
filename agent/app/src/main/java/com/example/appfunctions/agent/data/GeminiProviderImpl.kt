@@ -59,6 +59,7 @@ class GeminiProviderImpl
         ): LlmResponse {
             val convertedTools =
                 tools
+                    .sortedByDescending { it.id.startsWith(it.packageName) }
                     .distinctBy { toolConverter.getToolName(it) }
                     .mapNotNull { tool ->
                         try {

@@ -29,6 +29,7 @@ import androidx.appfunctions.AppFunctionStringValueConstraint
 import com.example.chatapp.data.CallManager
 import com.example.chatapp.data.MessageRepository
 import com.example.chatapp.data.RecipientsRepository
+import com.example.chatapp.data.WallpaperRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
@@ -48,6 +49,8 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
     @Inject lateinit var recipientsRepository: RecipientsRepository
 
     @Inject lateinit var callManager: CallManager
+
+    @Inject lateinit var wallpaperRepository: WallpaperRepository
 
     /**
      * Search for message recipients or chat groups by name or email.
@@ -171,5 +174,32 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
                 .apply { putExtra("nav_route", "call/${recipient.id}") },
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
         )
+    }
+
+    /**
+     * Updates the wallpaper image for a specific chat conversation.
+     *
+     * @param chatId The unique identifier for the recipient or chat group.
+     * @param wallpaperUri The URI of the image file to set as the chat wallpaper.
+     */
+    @AppFunction(isDescribedByKDoc = true)
+    suspend fun updateChatWallpaper(
+        chatId: String,
+        wallpaperUri: Uri,
+    ): Boolean {
+        val resolvedId =
+            recipientsRepository.getRecipientById(chatId)?.id
+                ?: recipientsRepository.getGroupById(chatId)?.id
+                ?: recipientsRepository.searchAny(chatId, maxCount = 1).firstOrNull()?.endpointValue
+                ?: chatId
+        val inputStream =
+            try {
+                contentResolver.openInputStream(wallpaperUri)
+            } catch (e: Exception) {
+                throw AppFunctionInvalidArgumentException("Cannot open wallpaper stream: ${e.message}")
+            } ?: throw AppFunctionInvalidArgumentException("Cannot open wallpaper stream")
+        return inputStream.use { stream ->
+            wallpaperRepository.setWallpaper(resolvedId, stream)
+        }
     }
 }
