@@ -22,12 +22,14 @@ import androidx.appfunctions.AppFunctionSerializable
  */
 @AppFunctionSerializable(isDescribedByKDoc = true)
 data class ContactSearchResult(
-    /** The unique identifier for the contact or group. */
-    val endpointValue: String,
+    /** The human-readable name of the contact or group. */
+    val contactDisplayName: String,
     /** The type of the found entity, either "INDIVIDUAL" or "GROUP". */
-    val endpointType: String,
-    /** The human-readable display name of the contact or group. */
-    val displayName: String,
+    val contactType: String,
+    /** The unique identifier of the endpoint. */
+    val endpointValue: String,
+    /** The human-readable label/display name of the endpoint. */
+    val endpointDisplayName: String,
 )
 
 /**
@@ -65,4 +67,28 @@ data class ChatGroup(
     val name: String,
     /** List of members belonging to the group. */
     val recipients: List<Recipient>,
+)
+
+/**
+ * Represents a message returned in search results.
+ */
+@AppFunctionSerializable(isDescribedByKDoc = true)
+data class Message(
+    /** The text content of the message. */
+    val messageBody: String,
+    /** The timestamp when the message was sent or received. */
+    val timestamp: Long,
+    /** The human-readable name of the sender. */
+    val senderDisplayName: String,
+)
+
+/**
+ * Represents the search results for a specific chat endpoint.
+ */
+@AppFunctionSerializable(isDescribedByKDoc = true)
+data class MessagesSearchResult(
+    /** The unique identifier of the contact or group. */
+    val endpointValue: String,
+    /** The list of relevant messages found in this chat. */
+    val messages: List<Message>,
 )

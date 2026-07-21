@@ -32,6 +32,7 @@ import com.example.chatapp.data.RecipientsRepository
 import com.example.chatapp.data.WallpaperRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 /**
@@ -70,20 +71,15 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
         val recipients =
             when (filterType) {
                 "INDIVIDUAL" -> {
-                    recipientsRepository.searchRecipients(query, 3).map {
-                        ContactSearchResult(
-                            endpointValue = it.id,
-                            endpointType = "INDIVIDUAL",
-                            displayName = it.name,
-                        )
-                    }
+                    recipientsRepository.searchRecipients(query, 3)
                 }
                 "GROUP" -> {
                     recipientsRepository.searchGroups(query, 3).map {
                         ContactSearchResult(
+                            contactDisplayName = it.name,
+                            contactType = "GROUP",
                             endpointValue = it.id,
-                            endpointType = "GROUP",
-                            displayName = it.name,
+                            endpointDisplayName = it.name,
                         )
                     }
                 }
@@ -201,5 +197,64 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
         return inputStream.use { stream ->
             wallpaperRepository.setWallpaper(resolvedId, stream)
         }
+    }
+
+    /**
+     * Search for messages containing a query string, optionally filtered by a specific recipient.
+     *
+     * @param query The text to search for within message bodies. Cannot be empty.
+     * @param endpointValue Optional unique identifier of the contact or group to restrict the search to.
+     * @return List of [MessagesSearchResult] matching the query.
+     * @throws AppFunctionInvalidArgumentException If the query is blank.
+     */
+    @AppFunction(isDescribedByKDoc = true)
+    suspend fun searchMessages(
+        query: String,
+        endpointValue: String? = null,
+    ): List<MessagesSearchResult> {
+        if (query.isBlank()) {
+            throw AppFunctionInvalidArgumentException("Query cannot be empty")
+        }
+        val targetIds =
+            if (endpointValue != null) {
+                listOf(endpointValue)
+            } else {
+                val individuals = recipientsRepository.getAllRecipients().map { it.id }
+                val groups = recipientsRepository.getAllGroups().map { it.id }
+                individuals + groups
+            }
+
+        val results = mutableListOf<MessagesSearchResult>()
+
+        for (id in targetIds) {
+            val messages = messageRepository.getMessages(id).first()
+            val matchingMessages =
+                messages.filter { it.content.contains(query, ignoreCase = true) }
+            if (matchingMessages.isNotEmpty()) {
+                results.add(
+                    MessagesSearchResult(
+                        endpointValue = id,
+                        messages =
+                            matchingMessages.map {
+                                val senderDisplayName = it.senderName
+                                    ?: if (it.isInbound) {
+                                        recipientsRepository.getRecipientById(id)?.name
+                                            ?: recipientsRepository.getGroupById(id)?.name
+                                            ?: "Other"
+                                    } else {
+                                        "Me"
+                                    }
+                                Message(
+                                    messageBody = it.content,
+                                    timestamp = it.sentAt,
+                                    senderDisplayName = senderDisplayName,
+                                )
+                            },
+                    )
+                )
+            }
+        }
+
+        return results
     }
 }
