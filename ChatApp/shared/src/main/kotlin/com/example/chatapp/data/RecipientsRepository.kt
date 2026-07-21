@@ -88,26 +88,28 @@ class RecipientsRepository
             query: String?,
             maxCount: Int,
         ): List<ContactSearchResult> {
-            val matched = if (query.isNullOrBlank()) {
-                recipients
-            } else {
-                recipients.filter {
-                    it.name.contains(query, ignoreCase = true) ||
-                        it.email.contains(
-                            query,
-                            ignoreCase = true,
-                        )
+            val matched =
+                if (query.isNullOrBlank()) {
+                    recipients
+                } else {
+                    recipients.filter {
+                        it.name.contains(query, ignoreCase = true) ||
+                            it.email.contains(
+                                query,
+                                ignoreCase = true,
+                            )
+                    }
                 }
-            }
 
-            val mapped = matched.map {
-                ContactSearchResult(
-                    contactDisplayName = it.name,
-                    contactType = "INDIVIDUAL",
-                    endpointValue = it.id,
-                    endpointDisplayName = it.email,
-                )
-            }
+            val mapped =
+                matched.map {
+                    ContactSearchResult(
+                        contactDisplayName = it.name,
+                        contactType = "INDIVIDUAL",
+                        endpointValue = it.id,
+                        endpointDisplayName = it.email,
+                    )
+                }
 
             return if (query.isNullOrBlank()) {
                 mapped.take(maxCount)
@@ -146,7 +148,6 @@ class RecipientsRepository
          * @param maxCount Maximum number of results to return per entity type.
          * @return A unified list of [ContactSearchResult] containing both individuals and groups.
          */
-
 
         fun searchAny(
             query: String?,

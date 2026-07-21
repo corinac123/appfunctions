@@ -238,21 +238,22 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
                         endpointValue = id,
                         messages =
                             matchingMessages.map {
-                                val senderDisplayName = it.senderName
-                                    ?: if (it.isInbound) {
-                                        recipientsRepository.getRecipientById(id)?.name
-                                            ?: recipientsRepository.getGroupById(id)?.name
-                                            ?: "Other"
-                                    } else {
-                                        "Me"
-                                    }
+                                val senderDisplayName =
+                                    it.senderName
+                                        ?: if (it.isInbound) {
+                                            recipientsRepository.getRecipientById(id)?.name
+                                                ?: recipientsRepository.getGroupById(id)?.name
+                                                ?: "Other"
+                                        } else {
+                                            "Me"
+                                        }
                                 Message(
                                     messageBody = it.content,
                                     timestamp = it.sentAt,
                                     senderDisplayName = senderDisplayName,
                                 )
                             },
-                    )
+                    ),
                 )
             }
         }
