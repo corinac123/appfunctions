@@ -33,17 +33,6 @@ data class ContactSearchResult(
 )
 
 /**
- * Result of a message sending operation.
- */
-@AppFunctionSerializable(isDescribedByKDoc = true)
-data class Result(
-    /** The unique identifier for the successfully sent message. */
-    val messageId: String,
-    /** A human-readable status message confirming success. */
-    val message: String,
-)
-
-/**
  * Represents an individual recipient or contact.
  */
 @AppFunctionSerializable(isDescribedByKDoc = true)

@@ -57,19 +57,22 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
      * Search for message recipients or chat groups by name or email.
      * Required workflow: Call this before "send" or "makeCall" to obtain a valid endpointValue (unique ID).
      *
-     * @param query Search string for contact name, email, or group name. Can be partial or full names. If blank, returns the most recently contacted entities.
-     * @param filterType Filter results by entity type. Accepts "INDIVIDUAL" or "GROUP".
+     * @param query Search string for contact name, email, or group name. Throws [AppFunctionInvalidArgumentException] if empty.
+     * @param contactType Filter results by entity type. Accepts "INDIVIDUAL", "GROUP", or "ANY".
      * @return List of [ContactSearchResult] objects matching the query.
-     * @throws AppFunctionInvalidArgumentException If an invalid filterType is provided or if no matching contact or group is found. If thrown, suggest the user clarify the recipient or group name.
+     * @throws AppFunctionInvalidArgumentException If query is empty or blank, an invalid contactType is provided, or if no matching contact or group is found. If thrown, suggest the user clarify the recipient or group name.
      */
     @AppFunction(isDescribedByKDoc = true)
     suspend fun searchContacts(
         query: String,
-        @AppFunctionStringValueConstraint(enumValues = ["INDIVIDUAL", "GROUP"])
-        filterType: String,
+        @AppFunctionStringValueConstraint(enumValues = ["INDIVIDUAL", "GROUP", "ANY"])
+        contactType: String,
     ): List<ContactSearchResult> {
+        if (query.isBlank()) {
+            throw AppFunctionInvalidArgumentException("Query cannot be empty")
+        }
         val recipients =
-            when (filterType) {
+            when (contactType) {
                 "INDIVIDUAL" -> {
                     recipientsRepository.searchRecipients(query, 3)
                 }
@@ -83,19 +86,19 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
                         )
                     }
                 }
-                else -> {
+                "ANY" -> {
                     recipientsRepository.searchAny(query, maxCount = 3)
-                        .ifEmpty {
-                            throw AppFunctionInvalidArgumentException(
-                                "Only INDIVIDUAL or GROUP are accepted filter arguments.",
-                            )
-                        }
+                }
+                else -> {
+                    throw AppFunctionInvalidArgumentException(
+                        "Invalid contactType: $contactType. Must be INDIVIDUAL, GROUP, or ANY.",
+                    )
                 }
             }
 
         if (recipients.isEmpty()) {
             throw AppFunctionInvalidArgumentException(
-                "$filterType with name $query not found. Ask the user to clarify the name",
+                "$contactType with name $query not found. Ask the user to clarify the name",
             )
         }
         return recipients
@@ -108,17 +111,17 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
      * @param endpointValue The unique identifier for the recipient or group obtained from searchContacts.
      * @param messageBody The text content of the message to send. Cannot be empty or blank.
      * @param imageUris Optional list of image URIs to attach to the message.
-     * @return A [Result] object containing the messageId and a human-readable success confirmation.
+     * @return A human-readable message indicating the error or confirmation.
      * @throws AppFunctionInvalidArgumentException If messageBody is empty or blank. If thrown, ask the user to provide the message content to send.
      * @throws AppFunctionElementNotFoundException If no contact or group matches endpointValue. If thrown, call "searchContacts" to find the correct ID.
      * @throws AppFunctionAppUnknownException If sending fails due to a repository error. If thrown, suggest the user retry later.
      */
     @AppFunction(isDescribedByKDoc = true)
-    suspend fun send(
+    suspend fun sendMessage(
         endpointValue: String,
         messageBody: String,
         imageUris: List<Uri>? = null,
-    ): Result {
+    ): String {
         if (messageBody.isBlank()) {
             throw AppFunctionInvalidArgumentException("Message body cannot be empty")
         }
@@ -129,20 +132,19 @@ abstract class BaseChatAppFunctionService : AppFunctionService() {
                     "No contact or group found for endpointValue: $endpointValue",
                 )
 
-        val sentMessageId =
-            try {
-                messageRepository.send(
-                    text = messageBody,
-                    recipientIds = listOf(endpointValue),
-                    imageUris = imageUris?.map { it.toString() },
-                )
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                throw AppFunctionAppUnknownException("Failed to send message: ${e.message}")
-            }
+        try {
+            messageRepository.send(
+                text = messageBody,
+                recipientIds = listOf(endpointValue),
+                imageUris = imageUris?.map { it.toString() },
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw AppFunctionAppUnknownException("Failed to send message: ${e.message}")
+        }
 
-        return Result(sentMessageId, "Message sent to: $displayName.")
+        return "Message sent to: $displayName."
     }
 
     /**
